@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>SMart PDF Editor PRO Ver.1.0.2</title>
+  <title>SMart PDF Editor PRO Ver.1.0.3</title>
 
   <!-- iOS Web App Configurations -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -325,6 +325,7 @@
       position: relative;
     }
 
+    /* Top Subbar Header with Reorder History */
     .stage-sub-bar-container {
       flex-shrink: 0;
       padding: 8px 12px 4px 12px;
@@ -365,6 +366,10 @@
       gap: 4px;
       white-space: nowrap;
     }
+    .subbar-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
     .subbar-btn.danger {
       color: #FFA49E;
       background: rgba(255, 59, 48, 0.2);
@@ -402,11 +407,22 @@
       flex-direction: column;
       position: relative;
       cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .desktop-thumb-card.selected {
       border-color: var(--adobe-red);
       background: rgba(250, 15, 0, 0.05);
       box-shadow: 0 0 0 1px var(--adobe-red);
+    }
+    .desktop-thumb-card.is-dragging {
+      opacity: 0.35;
+      transform: scale(0.95);
+      border: 2px dashed #98A2B3;
+    }
+    .desktop-thumb-card.drag-over-target {
+      border: 2px solid #00B4D8 !important;
+      box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.4) !important;
+      transform: scale(1.02) !important;
     }
 
     .card-top-row {
@@ -685,20 +701,39 @@
       color: #FFF;
     }
 
-    /* Box Fill Toggle Option */
-    .checkbox-inline-label {
-      cursor: pointer;
+    /* Beautiful Fill Option Pill Button */
+    .box-fill-pill-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: var(--surface-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-muted);
       font-size: 11.5px;
       font-weight: 700;
-      color: #FFF;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: fit-content;
     }
-    .checkbox-inline-label input[type="checkbox"] {
-      width: 15px;
-      height: 15px;
-      accent-color: var(--adobe-red);
+    .box-fill-pill-btn.active {
+      background: rgba(250, 15, 0, 0.18);
+      border-color: var(--adobe-red);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px var(--adobe-glow);
+    }
+    .box-fill-pill-btn .indicator-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #505664;
+      transition: all 0.2s ease;
+    }
+    .box-fill-pill-btn.active .indicator-dot {
+      background: var(--adobe-red);
+      box-shadow: 0 0 6px var(--adobe-red);
     }
 
     /* ================= 6. MOBILE BOTTOM NAVIGATION ================= */
@@ -994,7 +1029,7 @@
         </svg>
       </div>
       <div class="brand-info">
-        <h1>SMart PDF Editor <span class="pro-badge">PRO</span> <span class="ver-badge">Ver.1.0.2</span></h1>
+        <h1>SMart PDF Editor <span class="pro-badge">PRO</span> <span class="ver-badge">Ver.1.0.3</span></h1>
       </div>
       <div class="file-status-info" id="fileStatusInfo">Open PDF files by clicking or dropping files in the center workspace</div>
     </div>
@@ -1059,14 +1094,23 @@
       <!-- SUBBAR -->
       <div class="stage-sub-bar-container">
         <div class="stage-sub-bar">
+          <!-- Batch actions + Reorder Undo/Redo -->
           <div class="subbar-group" id="gridBatchActions">
             <button class="subbar-btn" onclick="selectAllPages(true)" data-i18n="btnSelectAll">✓ All</button>
             <button class="subbar-btn" onclick="selectAllPages(false)" data-i18n="btnDeselectAll">✕ Deselect</button>
             <button class="subbar-btn" id="btnBatchRotate" onclick="rotateSelectedPages(90)" data-i18n="btnRotateSelected">↻ Rotate</button>
             <button class="subbar-btn danger" id="btnBatchDelete" onclick="deleteSelectedPages()" data-i18n="btnDeleteSelected">🗑 Delete</button>
-            <span id="selectedCountBadge" style="font-size:11.5px; font-weight:700; color:var(--adobe-red);">0 selected</span>
+            
+            <div style="width:1px; height:18px; background:var(--border-color); margin:0 4px;"></div>
+            
+            <!-- Reorder History Buttons -->
+            <button class="subbar-btn" id="btnReorderUndo" onclick="undoReorderAction()" title="Undo page reorder" disabled>↶ <span data-i18n="btnUndoReorder">Undo</span></button>
+            <button class="subbar-btn" id="btnReorderRedo" onclick="redoReorderAction()" title="Redo page reorder" disabled>↷ <span data-i18n="btnRedoReorder">Redo</span></button>
+
+            <span id="selectedCountBadge" style="font-size:11.5px; font-weight:700; color:var(--adobe-red); margin-left:4px;">0 selected</span>
           </div>
 
+          <!-- Canvas Focus Navigation -->
           <div class="subbar-group" id="canvasFocusControls" style="display:none; width:100%; justify-content:space-between;">
             <div style="display:flex; align-items:center; gap:6px;">
               <button class="subbar-btn primary-exit" onclick="exitCanvasToGrid()" data-i18n="btnExitFocus">✕ Back</button>
@@ -1116,7 +1160,7 @@
       <div class="panel-section" id="panel-merge">
         <div class="panel-title" data-i18n="panelMergeTitle">Organize & Rotate</div>
         <p style="font-size:11px; color:var(--text-muted); line-height:1.4; margin-bottom:8px;" data-i18n="panelMergeDesc">
-          • Use ◀ / ▶ buttons to reorder pages.<br>• Tap card to select/deselect.
+          • Drag cards on PC, or use ◀ / ▶ buttons on mobile.<br>• Tap card to select/deselect.
         </p>
         <label for="generalPdfInput" class="subbar-btn" style="width:100%; justify-content:center; padding:8px; cursor:pointer;" data-i18n="btnAddPdfs">
           ＋ Add More PDF Files
@@ -1159,12 +1203,12 @@
           <div class="color-swatch-circle" style="background:#FFFFFF; border:1px solid #777;" onclick="selectPresetColor('#FFFFFF', this)"></div>
         </div>
 
-        <!-- Box Fill Checkbox (Always visible when in Box mode) -->
-        <div class="field-group" id="boxFillOptionGroup" style="display:none; margin-top:4px;">
-          <label class="checkbox-inline-label">
-            <input type="checkbox" id="boxFillCheckbox" onchange="updateDrawStyle()">
-            <span data-i18n="solidBoxCheck">Solid Box (ถมสีทึบ)</span>
-          </label>
+        <!-- Redesigned Solid Box Fill Toggle -->
+        <div class="field-group" id="boxFillOptionGroup" style="display:none; margin-top:6px;">
+          <div class="box-fill-pill-btn" id="btnBoxFillToggle" onclick="toggleBoxFill()">
+            <div class="indicator-dot"></div>
+            <span id="labelSolidBox" data-i18n="solidBoxCheck">Solid Box</span>
+          </div>
         </div>
 
         <div class="field-group" style="margin-top:6px;">
@@ -1229,7 +1273,6 @@
       <span data-i18n="mTabStamp">Stamp</span>
     </button>
     
-    <!-- Red Highlighted Export Button -->
     <button class="mobile-tab-btn btn-export-accent" onclick="openExportModal()">
       <svg viewBox="0 0 24 24"><path d="M19 12V19H5V12H3V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V12H19ZM13 12.67L15.59 10.09L17 11.5L12 16.5L7 11.5L8.41 10.09L11 12.67V3H13V12.67Z"/></svg>
       <span data-i18n="mTabExport">Export</span>
@@ -1270,6 +1313,9 @@
     const { PDFDocument, degrees } = PDFLib;
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+    // Touch device detection helper
+    const isTouchOnlyDevice = () => ('ontouchstart' in window) && (window.innerWidth <= 1024);
+
     let currentLang = 'en';
 
     const i18n = {
@@ -1293,12 +1339,14 @@
         btnDeselectAll: "✕ Deselect",
         btnRotateSelected: "↻ Rotate",
         btnDeleteSelected: "🗑 Delete",
+        btnUndoReorder: "Undo",
+        btnRedoReorder: "Redo",
         selectedCount: "{n} selected",
         btnExitFocus: "✕ Back",
         dropZoneTitle: "Tap to choose PDF files",
         dropZoneDesc: "Multiple files supported. Full offline local processing.",
         panelMergeTitle: "Organize & Rotate",
-        panelMergeDesc: "• Use ◀ / ▶ buttons to reorder pages.<br>• Tap card to select/deselect.",
+        panelMergeDesc: "• Drag cards on PC, or use ◀ / ▶ buttons on mobile.<br>• Tap card to select/deselect.",
         btnAddPdfs: "＋ Add More PDF Files",
         panelSplitTitle: "Extract Selected Pages",
         panelSplitDesc: "• Tap cards to select pages to extract.<br>• Click Export to save.",
@@ -1307,7 +1355,7 @@
         toolHighlight: "🖍️ Highlight",
         toolRect: "⬛ Box",
         toolText: "🔤 Text",
-        solidBoxCheck: "Solid Box (ถมสีทึบ)",
+        solidBoxCheck: "Solid Box",
         strokeWidthLabel: "Stroke / Size:",
         opacityLabel: "Opacity:",
         panelWatermarkTitle: "Watermark & Signature",
@@ -1355,12 +1403,14 @@
         btnDeselectAll: "✕ ยกเลิก",
         btnRotateSelected: "↻ หมุน",
         btnDeleteSelected: "🗑 ลบ",
+        btnUndoReorder: "ย้อนกลับ",
+        btnRedoReorder: "ทำซ้ำ",
         selectedCount: "เลือก {n} หน้า",
         btnExitFocus: "✕ กลับ",
         dropZoneTitle: "แตะเพื่อเลือกไฟล์ PDF",
         dropZoneDesc: "เลือกได้หลายไฟล์พร้อมกัน ทำงานบนเครื่องแบบ Local ปลอดภัย 100%",
         panelMergeTitle: "การจัดลำดับ & หมุนหน้า",
-        panelMergeDesc: "• กดปุ่ม ◀ / ▶ ใต้การ์ดเพื่อย้ายสลับหน้า<br>• แตะที่การ์ดเพื่อเลือก/ยกเลิก",
+        panelMergeDesc: "• ลากการ์ดสลับที่บนคอม หรือกด ◀ / ▶ บนมือถือ<br>• แตะที่การ์ดเพื่อเลือก/ยกเลิก",
         btnAddPdfs: "＋ เพิ่มไฟล์ PDF",
         panelSplitTitle: "แยกกลุ่มหน้าที่เลือก",
         panelSplitDesc: "• แตะที่การ์ดเพื่อเลือกหน้าที่ต้องการดึงออกมา<br>• กดปุ่ม ส่งออก เพื่อเซฟไฟล์",
@@ -1369,7 +1419,7 @@
         toolHighlight: "🖍️ ไฮไลท์",
         toolRect: "⬛ กรอบ",
         toolText: "🔤 อักษร",
-        solidBoxCheck: "Solid Box (ถมสีทึบ)",
+        solidBoxCheck: "ถมสีทึบ",
         strokeWidthLabel: "ขนาดเส้น:",
         opacityLabel: "ความโปร่งใส:",
         panelWatermarkTitle: "วางลายน้ำ & ลายเซ็นต์",
@@ -1430,6 +1480,7 @@
       }
 
       updateSelectionCountBadge();
+      updateReorderHistoryButtons();
       renderGridCards();
     }
 
@@ -1438,8 +1489,15 @@
     let isCanvasExpanded = false;
     let currentFocusedPageIndex = 0;
 
+    // Reorder Undo / Redo Stacks
+    let reorderUndoStack = [];
+    let reorderRedoStack = [];
+
+    let draggedCardIndex = null;
+
     let activeDrawTool = 'pen';
     let activeColor = '#FA0F00';
+    let isBoxFilled = false;
     let isDrawing = false;
     let currentStroke = null;
 
@@ -1490,10 +1548,47 @@
       return copy.buffer;
     }
 
+    // ==========================================
+    // REORDER UNDO & REDO CONTROLLER
+    // ==========================================
+    function pushReorderState() {
+      // Save shallow copy of pages array order
+      reorderUndoStack.push([...pagesData]);
+      reorderRedoStack = [];
+      updateReorderHistoryButtons();
+    }
+
+    function undoReorderAction() {
+      if (reorderUndoStack.length === 0) return;
+      reorderRedoStack.push([...pagesData]);
+      pagesData = reorderUndoStack.pop();
+      updateReorderHistoryButtons();
+      renderGridCards();
+      showToast('Undo reorder');
+    }
+
+    function redoReorderAction() {
+      if (reorderRedoStack.length === 0) return;
+      reorderUndoStack.push([...pagesData]);
+      pagesData = reorderRedoStack.pop();
+      updateReorderHistoryButtons();
+      renderGridCards();
+      showToast('Redo reorder');
+    }
+
+    function updateReorderHistoryButtons() {
+      const uBtn = document.getElementById('btnReorderUndo');
+      const rBtn = document.getElementById('btnReorderRedo');
+      if (uBtn) uBtn.disabled = (reorderUndoStack.length === 0);
+      if (rBtn) rBtn.disabled = (reorderRedoStack.length === 0);
+    }
+
+    // ==========================================
+    // UNIVERSAL FILE SAVING
+    // ==========================================
     async function saveFileUniversal(blob, filename, suggestedMime) {
       const file = new File([blob], filename, { type: suggestedMime });
 
-      // iOS Share Sheet
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
@@ -1507,7 +1602,6 @@
         }
       }
 
-      // Desktop File System Picker
       if ('showSaveFilePicker' in window) {
         try {
           const extension = filename.split('.').pop();
@@ -1528,7 +1622,6 @@
         }
       }
 
-      // Fallback
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1575,6 +1668,10 @@
             });
           }
         }
+
+        reorderUndoStack = [];
+        reorderRedoStack = [];
+        updateReorderHistoryButtons();
 
         document.getElementById('fileStatusInfo').textContent = t('fileStatusLoaded', { n: pagesData.length });
         renderActiveWorkspace();
@@ -1650,11 +1747,55 @@
     function renderGridCards() {
       const grid = document.getElementById('cardsGrid');
       grid.innerHTML = '';
+      const touchUser = isTouchOnlyDevice();
 
       pagesData.forEach((item, index) => {
         const card = document.createElement('div');
         card.className = `desktop-thumb-card ${item.selected ? 'selected' : ''}`;
         
+        // PC Drag-and-Drop capability enabled
+        const isDragAllowed = (!touchUser) && (currentNavMode === 'merge' || currentNavMode === 'split');
+        card.draggable = isDragAllowed;
+
+        if (isDragAllowed) {
+          card.addEventListener('dragstart', (e) => {
+            draggedCardIndex = index;
+            card.classList.add('is-dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', index);
+          });
+
+          card.addEventListener('dragend', () => {
+            draggedCardIndex = null;
+            card.classList.remove('is-dragging');
+            document.querySelectorAll('.desktop-thumb-card').forEach(c => c.classList.remove('drag-over-target'));
+          });
+
+          card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (draggedCardIndex !== null && draggedCardIndex !== index) {
+              card.classList.add('drag-over-target');
+            }
+          });
+
+          card.addEventListener('dragleave', () => {
+            card.classList.remove('drag-over-target');
+          });
+
+          card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            card.classList.remove('drag-over-target');
+            if (draggedCardIndex !== null && draggedCardIndex !== index) {
+              pushReorderState();
+              const movedItem = pagesData.splice(draggedCardIndex, 1)[0];
+              pagesData.splice(index, 0, movedItem);
+              renderGridCards();
+              showToast(t('toastPageMoved', { to: index + 1 }));
+            }
+          });
+        }
+
         card.onclick = () => {
           if (currentNavMode === 'draw' || currentNavMode === 'watermark') {
             expandPageToCanvas(index);
@@ -1683,11 +1824,11 @@
 
           <div class="card-controls-row">
             <div class="card-btn-group">
-              <button class="btn-card-action touch-nav-btn" onclick="reorderSinglePage(${index}, -1, event)">◀</button>
-              <button class="btn-card-action touch-nav-btn" onclick="reorderSinglePage(${index}, 1, event)">▶</button>
-              <button class="btn-card-action" onclick="rotateSinglePage(${index}, 90, event)">↻</button>
+              <button class="btn-card-action touch-nav-btn" title="Move page backward" onclick="reorderSinglePage(${index}, -1, event)">◀</button>
+              <button class="btn-card-action touch-nav-btn" title="Move page forward" onclick="reorderSinglePage(${index}, 1, event)">▶</button>
+              <button class="btn-card-action" title="Rotate clockwise" onclick="rotateSinglePage(${index}, 90, event)">↻</button>
             </div>
-            <button class="btn-card-delete" onclick="deleteSinglePage(${index}, event)">✕</button>
+            <button class="btn-card-delete" title="Delete page" onclick="deleteSinglePage(${index}, event)">✕</button>
           </div>
         `;
 
@@ -1712,6 +1853,7 @@
 
     function rotateSinglePage(idx, deg, e) {
       e.stopPropagation();
+      pushReorderState();
       pagesData[idx].rotation = (pagesData[idx].rotation + deg + 360) % 360;
       renderGridCards();
     }
@@ -1722,6 +1864,7 @@
         showToast(t('toastSelectPagesPrompt'), 'error');
         return;
       }
+      pushReorderState();
       selected.forEach(p => p.rotation = (p.rotation + deg + 360) % 360);
       renderGridCards();
       showToast(t('toastRotated', { n: selected.length }));
@@ -1731,6 +1874,7 @@
       e.stopPropagation();
       const target = idx + dir;
       if (target < 0 || target >= pagesData.length) return;
+      pushReorderState();
       const temp = pagesData[idx];
       pagesData[idx] = pagesData[target];
       pagesData[target] = temp;
@@ -1740,6 +1884,7 @@
 
     function deleteSinglePage(idx, e) {
       e.stopPropagation();
+      pushReorderState();
       pagesData.splice(idx, 1);
       renderGridCards();
       updateExportButton();
@@ -1752,6 +1897,7 @@
         return;
       }
       if (confirm(t('confirmDeleteSelected', { n: toDeleteCount }))) {
+        pushReorderState();
         pagesData = pagesData.filter(p => !p.selected);
         renderGridCards();
         updateExportButton();
@@ -1839,6 +1985,13 @@
       updateDrawStyle();
     }
 
+    function toggleBoxFill() {
+      isBoxFilled = !isBoxFilled;
+      const btn = document.getElementById('btnBoxFillToggle');
+      if (btn) btn.classList.toggle('active', isBoxFilled);
+      updateDrawStyle();
+    }
+
     function selectPresetColor(hex, el) {
       activeColor = hex;
       document.querySelectorAll('.color-swatch-circle').forEach(c => c.classList.remove('active'));
@@ -1923,15 +2076,13 @@
           return;
         }
 
-        const isFilled = document.getElementById('boxFillCheckbox') ? document.getElementById('boxFillCheckbox').checked : false;
-
         isDrawing = true;
         currentStroke = {
           tool: activeDrawTool,
           color: activeColor,
           width: parseInt(document.getElementById('drawStrokeSize').value),
           opacity: parseInt(document.getElementById('drawOpacityVal').value) / 100,
-          filled: isFilled,
+          filled: (activeDrawTool === 'rect' && isBoxFilled),
           points: [{ x: pos.x, y: pos.y }],
           startX: pos.x,
           startY: pos.y,
