@@ -1,9 +1,25 @@
+ปัญหาที่คุณพบเกิดจากคำสั่ง touch-action: none บน Canvas ซึ่งไปบล็อก Gesture สองนิ้วของเบราว์เซอร์ และไม่มีตัวคูณ Transform Scale/Pan มารองรับ
+ในเวอร์ชัน Ver.1.0.4 นี้ ได้เพิ่มระบบ Pan & Zoom Engine (ซูมเข้า-ออก และเลื่อนหน้ากระดาษอิสระ) อย่างสมบูรณ์:
+สิ่งที่เพิ่มเข้ามาใหม่:
+ * Pinch-to-Zoom & Two-Finger Pan บน iPad และ iPhone:
+   * 1 นิ้ว / Apple Pencil: ใช้สำหรับ วาด, เขียน, เซ็นชื่อ หรือลากย้ายลายน้ำ
+   * 2 นิ้ว (Pinch / Spread): กางนิ้วเพื่อซูมเข้า หรือหุบนิ้วเพื่อซูมออกได้ลื่นไหล
+   * 2 นิ้วลากพร้อมกัน: ใช้นิ้วเลื่อนกระดาษ (Pan) ไปยังมุมต่างๆ ที่ตกขอบจอได้อย่างอิสระ
+ * ระบบเลื่อนด้วยเมาส์บน PC:
+   * กดปุ่ม Spacebar ค้างไว้แล้วคลิกเมาส์ลาก หรือ คลิกลูกกลิ้งเมาส์ (Middle Click Drag) เพื่อเลื่อนหน้ากระดาษไปมาได้อิสระ
+   * สามารถใช้ Ctrl + หมุนลูกกลิ้งเมาส์ เพื่อซูมเข้า-ออกได้อย่างสะดวก
+ * แถบแว่นขยายปรับ Scale ซูม (Zoom Controls Widget):
+   * เพิ่มแถบลอยที่มุมล่างขวาของหน้าจอ มีปุ่ม 🔍- (ซูมออก), แถบ Slider ปรับสเกลเปอร์เซ็นต์ (25% ถึง 300%), ปุ่ม 🔍+ (ซูมเข้า) และปุ่ม Reset (100% / Fit) ให้กดปรับขนาดได้ทันทีทั้งบนคอมและมือถือ
+ * พิกัดการวาดแม่นยำ 100% ไม่เพี้ยน:
+   * คำนวณพิกัด clientX, clientY สัมพันธ์กับค่า Scale และ Pan Offset แบบเรียลไทม์ ทำให้แม้จะซูมขยาย 200% หรือเลื่อนกระดาษไปทางไหน เส้นวาดและตำแหน่งลายเซ็นต์จะยังตรงกับหัวปากกาและนิ้วเป๊ะ ไม่เยื้องหลุดตำแหน่ง
+โค้ดฉบับเต็ม (index.html) Ver.1.0.4
+นำโค้ดทั้งหมดนี้ไปวางทับในไฟล์ index.html บน GitHub แล้วกด Commit changes ได้เลยครับ:
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>SMart PDF Editor PRO Ver.1.0.3</title>
+  <title>SMart PDF Editor PRO Ver.1.0.4</title>
 
   <!-- iOS Web App Configurations -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -325,7 +341,7 @@
       position: relative;
     }
 
-    /* Top Subbar Header with Reorder History */
+    /* Top Subbar Header */
     .stage-sub-bar-container {
       flex-shrink: 0;
       padding: 8px 12px 4px 12px;
@@ -553,18 +569,32 @@
       font-weight: 700;
     }
 
-    /* ================= 4. CANVAS VIEWPORT ================= */
+    /* ================= 4. CANVAS VIEWPORT (PAN & ZOOM CONTAINER) ================= */
     .canvas-viewport {
       flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 10px 10px 240px 10px;
+      overflow: hidden;
       position: relative;
-      -webkit-overflow-scrolling: touch;
+      touch-action: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: default;
+    }
+    .canvas-viewport.is-panning {
+      cursor: grab;
+    }
+    .canvas-viewport.is-panning:active {
+      cursor: grabbing;
+    }
+
+    /* Transform Box for Pan & Zoom */
+    .canvas-transform-box {
+      transform-origin: 0 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: transform 0.04s ease-out;
+      will-change: transform;
     }
 
     .pdf-canvas-wrapper {
@@ -572,7 +602,6 @@
       background: #FFFFFF;
       box-shadow: 0 10px 35px rgba(0,0,0,0.6);
       display: none;
-      margin: auto;
     }
 
     #pdfBaseCanvas {
@@ -607,6 +636,53 @@
       object-fit: fill;
       pointer-events: none;
       display: block;
+    }
+
+    /* FLOATING ZOOM CONTROLLER WIDGET */
+    .floating-zoom-widget {
+      position: absolute;
+      right: 14px;
+      bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+      background: rgba(27, 29, 34, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 30px;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 800;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    .zoom-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--surface-panel);
+      border: 1px solid var(--border-color);
+      color: #FFF;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .zoom-btn:active {
+      background: var(--adobe-red);
+    }
+    .zoom-slider-range {
+      width: 70px;
+      accent-color: var(--adobe-red);
+    }
+    .zoom-value-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      min-width: 38px;
+      text-align: center;
+      cursor: pointer;
     }
 
     /* ================= 5. RIGHT SIDEBAR (DESKTOP) ================= */
@@ -973,21 +1049,13 @@
           margin-bottom: 4px !important;
         }
 
-        .pdf-canvas-wrapper {
-          width: 100% !important;
-          max-width: 100% !important;
-          box-sizing: border-box !important;
+        .floating-zoom-widget {
+          bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+          right: 10px;
+          padding: 3px 8px;
         }
-        #pdfBaseCanvas {
-          width: 100% !important;
-          height: auto !important;
-        }
-
-        .grid-viewport-container {
-          padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-        }
-        .canvas-viewport {
-          padding: 8px 8px calc(240px + env(safe-area-inset-bottom, 0px)) 8px !important;
+        .zoom-slider-range {
+          width: 55px;
         }
       }
 
@@ -998,9 +1066,6 @@
           position: relative;
           transform: none !important;
           border-left: 1px solid var(--border-color);
-        }
-        .canvas-viewport {
-          padding-bottom: 70px;
         }
       }
 
@@ -1029,7 +1094,7 @@
         </svg>
       </div>
       <div class="brand-info">
-        <h1>SMart PDF Editor <span class="pro-badge">PRO</span> <span class="ver-badge">Ver.1.0.3</span></h1>
+        <h1>SMart PDF Editor <span class="pro-badge">PRO</span> <span class="ver-badge">Ver.1.0.4</span></h1>
       </div>
       <div class="file-status-info" id="fileStatusInfo">Open PDF files by clicking or dropping files in the center workspace</div>
     </div>
@@ -1103,7 +1168,6 @@
             
             <div style="width:1px; height:18px; background:var(--border-color); margin:0 4px;"></div>
             
-            <!-- Reorder History Buttons -->
             <button class="subbar-btn" id="btnReorderUndo" onclick="undoReorderAction()" title="Undo page reorder" disabled>↶ <span data-i18n="btnUndoReorder">Undo</span></button>
             <button class="subbar-btn" id="btnReorderRedo" onclick="redoReorderAction()" title="Redo page reorder" disabled>↷ <span data-i18n="btnRedoReorder">Redo</span></button>
 
@@ -1140,14 +1204,24 @@
         <div class="cards-grid" id="cardsGrid"></div>
       </div>
 
-      <!-- VIEWPORT 2: Canvas Viewport (Scrollable & Fit to Width) -->
+      <!-- VIEWPORT 2: Canvas Viewport (Infinite Pan & Zoom Workspace) -->
       <div class="canvas-viewport" id="canvasViewport" style="display:none;">
-        <div class="pdf-canvas-wrapper" id="canvasWrapper">
-          <canvas id="pdfBaseCanvas"></canvas>
-          <canvas id="pdfDrawCanvas"></canvas>
-          <div id="watermarkInteractiveLayer">
-            <img id="watermarkLayerImg" src="" alt="Watermark">
+        <div class="canvas-transform-box" id="canvasTransformBox">
+          <div class="pdf-canvas-wrapper" id="canvasWrapper">
+            <canvas id="pdfBaseCanvas"></canvas>
+            <canvas id="pdfDrawCanvas"></canvas>
+            <div id="watermarkInteractiveLayer">
+              <img id="watermarkLayerImg" src="" alt="Watermark">
+            </div>
           </div>
+        </div>
+
+        <!-- Floating Zoom Magnifier Controller -->
+        <div class="floating-zoom-widget" id="floatingZoomWidget">
+          <button class="zoom-btn" onclick="stepZoom(-0.15)" title="Zoom Out">🔍−</button>
+          <input type="range" class="zoom-slider-range" id="zoomRangeSlider" min="25" max="300" value="100" oninput="onZoomSliderChange(this.value)">
+          <button class="zoom-btn" onclick="stepZoom(0.15)" title="Zoom In">🔍＋</button>
+          <span class="zoom-value-badge" id="zoomPercentBadge" onclick="fitCanvasToViewport()" title="Click to Fit Screen">100%</span>
         </div>
       </div>
 
@@ -1203,7 +1277,7 @@
           <div class="color-swatch-circle" style="background:#FFFFFF; border:1px solid #777;" onclick="selectPresetColor('#FFFFFF', this)"></div>
         </div>
 
-        <!-- Redesigned Solid Box Fill Toggle -->
+        <!-- Solid Box Fill Toggle -->
         <div class="field-group" id="boxFillOptionGroup" style="display:none; margin-top:6px;">
           <div class="box-fill-pill-btn" id="btnBoxFillToggle" onclick="toggleBoxFill()">
             <div class="indicator-dot"></div>
@@ -1313,7 +1387,6 @@
     const { PDFDocument, degrees } = PDFLib;
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    // Touch device detection helper
     const isTouchOnlyDevice = () => ('ontouchstart' in window) && (window.innerWidth <= 1024);
 
     let currentLang = 'en';
@@ -1489,10 +1562,8 @@
     let isCanvasExpanded = false;
     let currentFocusedPageIndex = 0;
 
-    // Reorder Undo / Redo Stacks
     let reorderUndoStack = [];
     let reorderRedoStack = [];
-
     let draggedCardIndex = null;
 
     let activeDrawTool = 'pen';
@@ -1500,6 +1571,23 @@
     let isBoxFilled = false;
     let isDrawing = false;
     let currentStroke = null;
+
+    // ========================================================
+    // PAN & ZOOM TRANSFORMATION STATE ENGINE
+    // ========================================================
+    let viewScale = 1.0;
+    let panX = 0;
+    let panY = 0;
+    let isSpacebarDown = false;
+    let isMousePanning = false;
+    let startMousePanX = 0, startMousePanY = 0;
+    let initialPanX = 0, initialPanY = 0;
+
+    // Multi-touch gestures
+    let initialPinchDistance = null;
+    let initialPinchScale = 1.0;
+    let initialTouchCenter = { x: 0, y: 0 };
+    let isTouchPanning = false;
 
     let watermarkImgObj = null;
     let watermarkBytes = null;
@@ -1528,6 +1616,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       initDefaultFileName();
       applyLanguage();
+      initPanZoomListeners();
     });
 
     function showToast(msg, type = 'success') {
@@ -1548,11 +1637,7 @@
       return copy.buffer;
     }
 
-    // ==========================================
-    // REORDER UNDO & REDO CONTROLLER
-    // ==========================================
     function pushReorderState() {
-      // Save shallow copy of pages array order
       reorderUndoStack.push([...pagesData]);
       reorderRedoStack = [];
       updateReorderHistoryButtons();
@@ -1583,9 +1668,6 @@
       if (rBtn) rBtn.disabled = (reorderRedoStack.length === 0);
     }
 
-    // ==========================================
-    // UNIVERSAL FILE SAVING
-    // ==========================================
     async function saveFileUniversal(blob, filename, suggestedMime) {
       const file = new File([blob], filename, { type: suggestedMime });
 
@@ -1753,7 +1835,6 @@
         const card = document.createElement('div');
         card.className = `desktop-thumb-card ${item.selected ? 'selected' : ''}`;
         
-        // PC Drag-and-Drop capability enabled
         const isDragAllowed = (!touchUser) && (currentNavMode === 'merge' || currentNavMode === 'split');
         card.draggable = isDragAllowed;
 
@@ -1916,6 +1997,178 @@
       renderActiveWorkspace();
     }
 
+    // ========================================================
+    // PAN & ZOOM TRANSFORMATION LOGIC
+    // ========================================================
+    function applyTransform() {
+      const box = document.getElementById('canvasTransformBox');
+      box.style.transform = `translate(${panX}px, ${panY}px) scale(${viewScale})`;
+      document.getElementById('zoomPercentBadge').textContent = Math.round(viewScale * 100) + '%';
+      document.getElementById('zoomRangeSlider').value = Math.round(viewScale * 100);
+    }
+
+    function stepZoom(delta) {
+      const newScale = Math.max(0.25, Math.min(3.0, viewScale + delta));
+      setZoom(newScale);
+    }
+
+    function onZoomSliderChange(val) {
+      setZoom(val / 100);
+    }
+
+    function setZoom(newScale) {
+      const viewport = document.getElementById('canvasViewport');
+      const rect = viewport.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      // Zoom towards center of viewport
+      panX = centerX - (centerX - panX) * (newScale / viewScale);
+      panY = centerY - (centerY - panY) * (newScale / viewScale);
+      viewScale = newScale;
+      applyTransform();
+    }
+
+    function fitCanvasToViewport() {
+      const wrapper = document.getElementById('canvasWrapper');
+      const viewport = document.getElementById('canvasViewport');
+      if (!wrapper || !viewport) return;
+
+      const vW = viewport.clientWidth - 24;
+      const vH = viewport.clientHeight - 60;
+      const cW = wrapper.offsetWidth;
+      const cH = wrapper.offsetHeight;
+
+      if (cW > 0 && cH > 0) {
+        viewScale = Math.min(vW / cW, vH / cH, 1.0);
+        panX = (viewport.clientWidth - cW * viewScale) / 2;
+        panY = (viewport.clientHeight - cH * viewScale) / 2;
+        applyTransform();
+      }
+    }
+
+    function initPanZoomListeners() {
+      const viewport = document.getElementById('canvasViewport');
+
+      // PC Wheel Zoom (Ctrl + Wheel) & Wheel Pan
+      viewport.addEventListener('wheel', (e) => {
+        if (!isCanvasExpanded) return;
+        e.preventDefault();
+
+        if (e.ctrlKey || e.metaKey) {
+          const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+          const rect = viewport.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+
+          const newScale = Math.max(0.25, Math.min(3.0, viewScale * zoomFactor));
+          panX = mouseX - (mouseX - panX) * (newScale / viewScale);
+          panY = mouseY - (mouseY - panY) * (newScale / viewScale);
+          viewScale = newScale;
+          applyTransform();
+        } else {
+          // Normal scroll pans the canvas
+          panX -= e.deltaX;
+          panY -= e.deltaY;
+          applyTransform();
+        }
+      }, { passive: false });
+
+      // PC Spacebar drag or middle mouse drag
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && !isSpacebarDown && e.target.tagName !== 'INPUT') {
+          isSpacebarDown = true;
+          viewport.classList.add('is-panning');
+        }
+      });
+      window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+          isSpacebarDown = false;
+          viewport.classList.remove('is-panning');
+        }
+      });
+
+      viewport.addEventListener('mousedown', (e) => {
+        if (isSpacebarDown || e.button === 1) { // Space or middle mouse
+          isMousePanning = true;
+          startMousePanX = e.clientX;
+          startMousePanY = e.clientY;
+          initialPanX = panX;
+          initialPanY = panY;
+          e.preventDefault();
+        }
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (isMousePanning) {
+          panX = initialPanX + (e.clientX - startMousePanX);
+          panY = initialPanY + (e.clientY - startMousePanY);
+          applyTransform();
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        isMousePanning = false;
+      });
+
+      // TOUCH GESTURES: 2 FINGERS PINCH ZOOM & TWO FINGER PAN
+      viewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          e.preventDefault();
+          isTouchPanning = true;
+          const t1 = e.touches[0];
+          const t2 = e.touches[1];
+
+          initialPinchDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+          initialPinchScale = viewScale;
+          initialTouchCenter = {
+            x: (t1.clientX + t2.clientX) / 2,
+            y: (t1.clientY + t2.clientY) / 2
+          };
+          initialPanX = panX;
+          initialPanY = panY;
+        }
+      }, { passive: false });
+
+      viewport.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && isTouchPanning) {
+          e.preventDefault();
+          const t1 = e.touches[0];
+          const t2 = e.touches[1];
+
+          // 1. Pinch zoom calculation
+          const currentDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+          const factor = currentDistance / initialPinchDistance;
+          const newScale = Math.max(0.25, Math.min(3.0, initialPinchScale * factor));
+
+          // 2. Pan position calculation
+          const currentCenter = {
+            x: (t1.clientX + t2.clientX) / 2,
+            y: (t1.clientY + t2.clientY) / 2
+          };
+          const deltaX = currentCenter.x - initialTouchCenter.x;
+          const deltaY = currentCenter.y - initialTouchCenter.y;
+
+          const rect = viewport.getBoundingClientRect();
+          const focalX = initialTouchCenter.x - rect.left;
+          const focalY = initialTouchCenter.y - rect.top;
+
+          panX = focalX - (focalX - initialPanX) * (newScale / initialPinchScale) + deltaX;
+          panY = focalY - (focalY - initialPanY) * (newScale / initialPinchScale) + deltaY;
+          viewScale = newScale;
+
+          applyTransform();
+        }
+      }, { passive: false });
+
+      viewport.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) {
+          isTouchPanning = false;
+          initialPinchDistance = null;
+        }
+      });
+    }
+
     async function renderCanvasPage(pageIndex) {
       if (!pagesData[pageIndex]) return;
       currentFocusedPageIndex = pageIndex;
@@ -1939,12 +2192,8 @@
       drawCanvas.height = viewport.height;
 
       wrapper.style.display = 'block';
-      wrapper.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
-
-      if (window.innerWidth > 1024) {
-        wrapper.style.width = viewport.width + 'px';
-        wrapper.style.height = viewport.height + 'px';
-      }
+      wrapper.style.width = viewport.width + 'px';
+      wrapper.style.height = viewport.height + 'px';
 
       await page.render({ canvasContext: baseCanvas.getContext('2d'), viewport }).promise;
 
@@ -1956,6 +2205,9 @@
       } else {
         document.getElementById('watermarkInteractiveLayer').style.display = 'none';
       }
+
+      // Automatically Fit Screen on first open
+      fitCanvasToViewport();
     }
 
     function changeDrawPage(step) {
@@ -2044,18 +2296,17 @@
     function setupDrawingEvents() {
       const drawCanvas = document.getElementById('pdfDrawCanvas');
 
+      // Exact coordinate mapping factoring in Zoom Scale & Pan Offset
       function getCanvasPos(clientX, clientY) {
         const rect = drawCanvas.getBoundingClientRect();
-        const scaleX = drawCanvas.width / rect.width;
-        const scaleY = drawCanvas.height / rect.height;
         return {
-          x: (clientX - rect.left) * scaleX,
-          y: (clientY - rect.top) * scaleY
+          x: (clientX - rect.left) * (drawCanvas.width / rect.width),
+          y: (clientY - rect.top) * (drawCanvas.height / rect.height)
         };
       }
 
       function startDraw(clientX, clientY) {
-        if (currentNavMode !== 'draw') return;
+        if (currentNavMode !== 'draw' || isSpacebarDown || isMousePanning || isTouchPanning) return;
         const pos = getCanvasPos(clientX, clientY);
 
         if (activeDrawTool === 'text') {
@@ -2094,7 +2345,7 @@
       }
 
       function moveDraw(clientX, clientY) {
-        if (!isDrawing || currentNavMode !== 'draw') return;
+        if (!isDrawing || currentNavMode !== 'draw' || isTouchPanning) return;
         const pos = getCanvasPos(clientX, clientY);
 
         if (activeDrawTool === 'pen' || activeDrawTool === 'highlight') {
@@ -2144,19 +2395,22 @@
         redrawDrawCanvas();
       }
 
-      drawCanvas.onmousedown = (e) => startDraw(e.clientX, e.clientY);
+      drawCanvas.onmousedown = (e) => {
+        if (e.button === 0 && !isSpacebarDown) startDraw(e.clientX, e.clientY);
+      };
       drawCanvas.onmousemove = (e) => moveDraw(e.clientX, e.clientY);
       drawCanvas.onmouseup = endDraw;
 
+      // Touch / Apple Pencil Listener (Single finger draws, Two fingers pan/zoom)
       drawCanvas.ontouchstart = (e) => {
-        if (e.touches.length === 1) {
-          e.preventDefault();
+        if (e.touches.length === 1 && !isTouchPanning) {
           startDraw(e.touches[0].clientX, e.touches[0].clientY);
+        } else if (e.touches.length >= 2) {
+          endDraw(); // Cancel single drawing when second finger touches
         }
       };
       drawCanvas.ontouchmove = (e) => {
-        if (e.touches.length === 1) {
-          e.preventDefault();
+        if (e.touches.length === 1 && !isTouchPanning) {
           moveDraw(e.touches[0].clientX, e.touches[0].clientY);
         }
       };
@@ -2550,3 +2804,4 @@
   </script>
 </body>
 </html>
+
