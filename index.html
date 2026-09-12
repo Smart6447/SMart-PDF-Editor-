@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>SMart PDF Editor PRO Ver.1.0.5</title>
+  <title>SMart PDF Editor PRO Ver.2.0.0 extraction</title>
 
   <!-- iOS Web App Configurations -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -115,7 +115,7 @@
     }
 
     .brand-info h1 {
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 800;
       display: flex;
       align-items: center;
@@ -134,14 +134,14 @@
     }
 
     .brand-info h1 span.ver-badge {
-      font-size: 8.5px;
+      font-size: 8px;
       font-weight: 600;
       background: rgba(255, 255, 255, 0.08);
       color: var(--text-muted);
       border: 1px solid var(--border-color);
       padding: 2px 5px;
       border-radius: 4px;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
     }
 
     .file-status-info {
@@ -668,7 +668,7 @@
       cursor: pointer;
     }
 
-    /* ================= 5. RIGHT SIDEBAR (DESKTOP) ================= */
+    /* ================= 5. RIGHT SIDEBAR / TOOL ISLAND ================= */
     .right-sidebar {
       width: 290px;
       background: var(--surface-sidebar);
@@ -714,20 +714,21 @@
       outline: none;
     }
 
+    /* 15 Colors Palette Grid */
     .color-swatches-grid {
-      display: flex;
-      align-items: center;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
       gap: 8px;
       margin-top: 4px;
-      flex-wrap: wrap;
     }
 
     .color-swatch-circle {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 8px;
       cursor: pointer;
       border: 2px solid transparent;
+      margin: auto;
     }
     .color-swatch-circle.active {
       border-color: #FFFFFF;
@@ -736,22 +737,23 @@
 
     .tool-selector-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
       margin-bottom: 12px;
     }
 
     .tool-btn {
-      padding: 10px 6px;
+      padding: 9px 4px;
       background: var(--surface-panel);
       border: 1px solid var(--border-color);
       border-radius: 8px;
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 4px;
       cursor: pointer;
     }
     .tool-btn.active {
@@ -793,6 +795,25 @@
     .box-fill-pill-btn.active .indicator-dot {
       background: var(--adobe-red);
       box-shadow: 0 0 6px var(--adobe-red);
+    }
+
+    /* Floating Island Button for Mobile */
+    .mobile-tool-island-trigger {
+      display: none;
+      position: fixed;
+      right: 16px;
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      background: var(--adobe-gradient);
+      color: #FFF;
+      border-radius: 30px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 8px 24px var(--adobe-glow);
+      z-index: 850;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
     }
 
     /* ================= 6. MOBILE BOTTOM NAVIGATION ================= */
@@ -950,7 +971,7 @@
     .desktop-toast.error { border-left: 4px solid var(--adobe-red); }
 
     /* ================================================================
-       8. ADAPTIVE RESPONSIVE ENGINE (MOBILE & IPAD PERFECTION)
+       8. ADAPTIVE RESPONSIVE ENGINE (MOBILE & IPAD FLOATING ISLAND)
        ================================================================ */
     
     @media (max-width: 1024px) {
@@ -967,85 +988,61 @@
         display: none;
       }
 
-      /* PORTRAIT MODE: IPHONE & IPAD */
+      /* PORTRAIT & MOBILE TABLET */
       @media (orientation: portrait) {
         .workspace-layout {
           flex-direction: column;
         }
 
+        .mobile-tool-island-trigger {
+          display: flex;
+        }
+
+        /* Goodnotes style Popup Card instead of giant blocking drawer */
         .right-sidebar {
           position: fixed !important;
-          left: 0 !important;
-          right: 0 !important;
-          bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+          right: 14px !important;
+          left: 14px !important;
+          bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
           top: auto !important;
-          width: 100% !important;
-          max-height: 180px !important;
-          background: #191B22 !important;
-          border-top: 1px solid var(--border-color) !important;
-          border-left: none !important;
-          transform: translateY(140%) !important;
-          transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-          z-index: 900 !important;
-          box-shadow: 0 -8px 24px rgba(0,0,0,0.6) !important;
-          border-radius: 14px 14px 0 0 !important;
-          padding: 8px 12px !important;
-          overflow-y: auto !important;
+          width: auto !important;
+          max-height: 380px !important;
+          background: rgba(25, 27, 34, 0.96) !important;
+          backdrop-filter: blur(18px) !important;
+          -webkit-backdrop-filter: blur(18px) !important;
+          border: 1px solid var(--border-hover) !important;
+          border-radius: 18px !important;
+          transform: scale(0.85) translateY(40px) !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          z-index: 950 !important;
+          box-shadow: 0 16px 40px rgba(0,0,0,0.75) !important;
+          padding: 12px !important;
         }
 
         .right-sidebar.mobile-open {
-          transform: translateY(0) !important;
+          transform: scale(1) translateY(0) !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
         }
 
         .panel-section {
-          padding: 2px !important;
+          padding: 0 !important;
           border-bottom: none !important;
         }
 
-        .panel-title {
-          font-size: 11px !important;
-          margin-bottom: 4px !important;
-        }
-
-        .tool-selector-grid {
-          display: flex !important;
-          gap: 5px !important;
-          margin-bottom: 6px !important;
-        }
-        .tool-btn {
-          flex: 1 !important;
-          justify-content: center !important;
-          padding: 6px 4px !important;
-          font-size: 11px !important;
-        }
-
-        .color-swatches-grid {
-          gap: 6px !important;
-          margin-bottom: 6px !important;
-        }
-        .color-swatch-circle {
-          width: 26px !important;
-          height: 26px !important;
-        }
-
-        .field-group {
-          margin-bottom: 4px !important;
-        }
-
         .floating-zoom-widget {
-          bottom: calc(66px + env(safe-area-inset-bottom, 0px));
-          right: 10px;
-          padding: 3px 8px;
-        }
-        .zoom-slider-range {
-          width: 55px;
+          left: 14px;
+          right: auto;
+          bottom: calc(72px + env(safe-area-inset-bottom, 0px));
         }
       }
 
       /* LANDSCAPE MODE */
       @media (orientation: landscape) {
         .right-sidebar {
-          width: 240px;
+          width: 260px;
           position: relative;
           transform: none !important;
           border-left: 1px solid var(--border-color);
@@ -1077,7 +1074,7 @@
         </svg>
       </div>
       <div class="brand-info">
-        <h1>SMart PDF Editor <span class="pro-badge">PRO</span> <span class="ver-badge">Ver.1.0.5</span></h1>
+        <h1>SMart PDF Editor <span class="pro-badge">PRO</span> <span class="ver-badge">Ver.2.0.0 extraction</span></h1>
       </div>
       <div class="file-status-info" id="fileStatusInfo">Open PDF files by clicking or dropping files in the center workspace</div>
     </div>
@@ -1131,7 +1128,7 @@
 
         <button id="btnSidebarExport" class="btn-sidebar-export" onclick="openExportModal()" disabled>
           <svg style="width:17px; height:17px; fill:currentColor;" viewBox="0 0 24 24"><path d="M19 12V19H5V12H3V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V12H19ZM13 12.67L15.59 10.09L17 11.5L12 16.5L7 11.5L8.41 10.09L11 12.67V3H13V12.67Z"/></svg>
-          <span data-i18n="btnExportTitle">Export (PDF / JPEG)</span>
+          <span data-i18n="btnExportTitle">Export Selected</span>
         </button>
       </div>
     </aside>
@@ -1205,11 +1202,16 @@
           <button class="zoom-btn" onclick="stepZoom(0.15)" title="Zoom In">🔍＋</button>
           <span class="zoom-value-badge" id="zoomPercentBadge" onclick="fitCanvasToViewport()" title="Click to Fit Screen">100%</span>
         </div>
+
+        <!-- Floating Tool Island Trigger (Mobile & Tablet) -->
+        <div class="mobile-tool-island-trigger" id="mobileIslandTrigger" onclick="toggleMobileToolDrawer()">
+          <span>🎨 Tools</span>
+        </div>
       </div>
 
     </main>
 
-    <!-- RIGHT SIDEBAR: TOOL DRAWER (BOTTOM DOCKED ON PORTRAIT) -->
+    <!-- RIGHT SIDEBAR: TOOL DRAWER (FLOATING ISLAND ON PORTRAIT) -->
     <aside class="right-sidebar" id="mainRightSidebar">
 
       <!-- MERGE -->
@@ -1248,15 +1250,47 @@
           <button class="tool-btn" id="btnTool-text" onclick="setDrawTool('text')">
             <span data-i18n="toolText">🔤 Text</span>
           </button>
+          <button class="tool-btn" id="btnTool-eraser" onclick="setDrawTool('eraser')">
+            <span data-i18n="toolEraser">🧹 Eraser</span>
+          </button>
         </div>
 
-        <div class="color-swatches-grid">
-          <div class="color-swatch-circle active" style="background:#FA0F00;" onclick="selectPresetColor('#FA0F00', this)"></div>
-          <div class="color-swatch-circle" style="background:#0055FF;" onclick="selectPresetColor('#0055FF', this)"></div>
-          <div class="color-swatch-circle" style="background:#0E9344;" onclick="selectPresetColor('#0E9344', this)"></div>
-          <div class="color-swatch-circle" style="background:#F59E0B;" onclick="selectPresetColor('#F59E0B', this)"></div>
-          <div class="color-swatch-circle" style="background:#000000;" onclick="selectPresetColor('#000000', this)"></div>
-          <div class="color-swatch-circle" style="background:#FFFFFF; border:1px solid #777;" onclick="selectPresetColor('#FFFFFF', this)"></div>
+        <!-- Eraser Options Submenu -->
+        <div class="field-group" id="eraserOptionsGroup" style="display:none;">
+          <label data-i18n="eraserModeLabel">Eraser Mode:</label>
+          <select class="field-select" id="eraserModeSelect">
+            <option value="stroke" data-i18n="eraserStroke">Stroke Eraser (Entire Stroke)</option>
+            <option value="precision" data-i18n="eraserPrecision">Precision Eraser (Segment)</option>
+          </select>
+
+          <label style="margin-top:6px;" data-i18n="eraserFilterLabel">Erase Target:</label>
+          <select class="field-select" id="eraserFilterSelect">
+            <option value="all" data-i18n="eraserFilterAll">All Elements</option>
+            <option value="highlight" data-i18n="eraserFilterHighlight">Highlighter Only</option>
+            <option value="pen" data-i18n="eraserFilterInk">Ink / Pen Only</option>
+            <option value="text" data-i18n="eraserFilterText">Text Only</option>
+          </select>
+        </div>
+
+        <!-- 15 Colors Palette Grid including Cyan, Pink, Crimson -->
+        <div class="color-swatches-grid" id="drawingColorPalette">
+          <div class="color-swatch-circle active" style="background:#FA0F00;" onclick="selectPresetColor('#FA0F00', this)" title="Adobe Red"></div>
+          <div class="color-swatch-circle" style="background:#800000;" onclick="selectPresetColor('#800000', this)" title="Crimson / แดงเลือดหมู"></div>
+          <div class="color-swatch-circle" style="background:#FF1493;" onclick="selectPresetColor('#FF1493', this)" title="Pink / ชมพู"></div>
+          <div class="color-swatch-circle" style="background:#0055FF;" onclick="selectPresetColor('#0055FF', this)" title="Royal Blue"></div>
+          <div class="color-swatch-circle" style="background:#00D2FF;" onclick="selectPresetColor('#00D2FF', this)" title="Cyan / ฟ้าสด"></div>
+          
+          <div class="color-swatch-circle" style="background:#0E9344;" onclick="selectPresetColor('#0E9344', this)" title="Emerald Green"></div>
+          <div class="color-swatch-circle" style="background:#10B981;" onclick="selectPresetColor('#10B981', this)" title="Mint Green"></div>
+          <div class="color-swatch-circle" style="background:#F59E0B;" onclick="selectPresetColor('#F59E0B', this)" title="Amber Yellow"></div>
+          <div class="color-swatch-circle" style="background:#EA580C;" onclick="selectPresetColor('#EA580C', this)" title="Orange"></div>
+          <div class="color-swatch-circle" style="background:#8B5CF6;" onclick="selectPresetColor('#8B5CF6', this)" title="Purple"></div>
+
+          <div class="color-swatch-circle" style="background:#000000;" onclick="selectPresetColor('#000000', this)" title="Black"></div>
+          <div class="color-swatch-circle" style="background:#4B5563;" onclick="selectPresetColor('#4B5563', this)" title="Gray"></div>
+          <div class="color-swatch-circle" style="background:#9CA3AF;" onclick="selectPresetColor('#9CA3AF', this)" title="Light Gray"></div>
+          <div class="color-swatch-circle" style="background:#FFFFFF; border:1px solid #777;" onclick="selectPresetColor('#FFFFFF', this)" title="White"></div>
+          <div class="color-swatch-circle" style="background:#FFFF00;" onclick="selectPresetColor('#FFFF00', this)" title="Fluorescent Yellow"></div>
         </div>
 
         <!-- Solid Box Fill Toggle -->
@@ -1268,13 +1302,13 @@
         </div>
 
         <div class="field-group" style="margin-top:6px;">
-          <label><span data-i18n="strokeWidthLabel">Stroke / Size:</span> <span id="strokeSizeLabel">4px</span></label>
-          <input type="range" id="drawStrokeSize" min="1" max="40" value="4" oninput="updateDrawStyle()">
+          <label><span data-i18n="strokeWidthLabel">Stroke / Font Size:</span> <span id="strokeSizeLabel">10px</span></label>
+          <input type="range" id="drawStrokeSize" min="1" max="40" value="10" oninput="updateDrawStyle()">
         </div>
 
         <div class="field-group">
-          <label><span data-i18n="opacityLabel">Opacity:</span> <span id="drawOpacityLabel">100%</span></label>
-          <input type="range" id="drawOpacityVal" min="10" max="100" value="100" oninput="updateDrawStyle()">
+          <label><span data-i18n="opacityLabel">Opacity:</span> <span id="drawOpacityLabel">50%</span></label>
+          <input type="range" id="drawOpacityVal" min="10" max="100" value="50" oninput="updateDrawStyle()">
         </div>
       </div>
 
@@ -1389,14 +1423,14 @@
         mTabStamp: "Stamp",
         mTabExport: "Export",
         exportFilenameLabel: "Export Filename:",
-        btnExportTitle: "Export (PDF / JPEG)",
+        btnExportTitle: "Export Selected",
         btnSelectAll: "✓ All",
         btnDeselectAll: "✕ Deselect",
         btnRotateSelected: "↻ Rotate",
         btnDeleteSelected: "🗑 Delete",
         btnUndoReorder: "Undo",
         btnRedoReorder: "Redo",
-        selectedCount: "{n} selected",
+        selectedCount: "{n} selected for export",
         btnExitFocus: "✕ Back",
         dropZoneTitle: "Tap to choose PDF files",
         dropZoneDesc: "Multiple files supported. Full offline local processing.",
@@ -1410,8 +1444,17 @@
         toolHighlight: "🖍️ Highlight",
         toolRect: "⬛ Box",
         toolText: "🔤 Text",
+        toolEraser: "🧹 Eraser",
+        eraserModeLabel: "Eraser Mode:",
+        eraserStroke: "Stroke Eraser",
+        eraserPrecision: "Precision Eraser",
+        eraserFilterLabel: "Erase Target:",
+        eraserFilterAll: "All Elements",
+        eraserFilterHighlight: "Highlighter Only",
+        eraserFilterInk: "Ink / Pen Only",
+        eraserFilterText: "Text Only",
         solidBoxCheck: "Solid Box",
-        strokeWidthLabel: "Stroke / Size:",
+        strokeWidthLabel: "Stroke / Font Size:",
         opacityLabel: "Opacity:",
         panelWatermarkTitle: "Watermark & Signature",
         btnUploadStamp: "🖼️ Upload Signature",
@@ -1434,7 +1477,7 @@
         toastRenderingJpeg: "Rendering {n} images...",
         toastExportPdfSuccess: "PDF exported successfully!",
         toastExportZipSuccess: "ZIP exported successfully!",
-        toastSelectPagesPrompt: "Please select at least 1 page",
+        toastSelectPagesPrompt: "Please tick at least 1 page to export",
         confirmDeleteSelected: "Delete {n} selected page(s)?",
         promptTextBox: "Enter text:"
       },
@@ -1453,14 +1496,14 @@
         mTabStamp: "ลายเซ็นต์",
         mTabExport: "ส่งออก",
         exportFilenameLabel: "ชื่อไฟล์ส่งออก:",
-        btnExportTitle: "ส่งออก (PDF / JPEG)",
+        btnExportTitle: "ส่งออกหน้าที่เลือก",
         btnSelectAll: "✓ ทั้งหมด",
         btnDeselectAll: "✕ ยกเลิก",
         btnRotateSelected: "↻ หมุน",
         btnDeleteSelected: "🗑 ลบ",
         btnUndoReorder: "ย้อนกลับ",
         btnRedoReorder: "ทำซ้ำ",
-        selectedCount: "เลือก {n} หน้า",
+        selectedCount: "เลือกไว้ {n} หน้าที่จะส่งออก",
         btnExitFocus: "✕ กลับ",
         dropZoneTitle: "แตะเพื่อเลือกไฟล์ PDF",
         dropZoneDesc: "เลือกได้หลายไฟล์พร้อมกัน ทำงานบนเครื่องแบบ Local ปลอดภัย 100%",
@@ -1474,8 +1517,17 @@
         toolHighlight: "🖍️ ไฮไลท์",
         toolRect: "⬛ กรอบ",
         toolText: "🔤 อักษร",
+        toolEraser: "🧹 ยางลบ",
+        eraserModeLabel: "โหมดยางลบ:",
+        eraserStroke: "ลบทั้งเส้น (Stroke)",
+        eraserPrecision: "ลบเฉพาะจุด (Precision)",
+        eraserFilterLabel: "ประเภทที่ต้องการลบ:",
+        eraserFilterAll: "ลบทุกอย่าง",
+        eraserFilterHighlight: "เฉพาะไฮไลท์",
+        eraserFilterInk: "เฉพาะลายเส้น/ปากกา",
+        eraserFilterText: "เฉพาะข้อความ",
         solidBoxCheck: "ถมสีทึบ",
-        strokeWidthLabel: "ขนาดเส้น:",
+        strokeWidthLabel: "ขนาดเส้น / ฟอนต์:",
         opacityLabel: "ความโปร่งใส:",
         panelWatermarkTitle: "วางลายน้ำ & ลายเซ็นต์",
         btnUploadStamp: "🖼️ อัปโหลดลายเซ็นต์",
@@ -1498,7 +1550,7 @@
         toastRenderingJpeg: "กำลังสร้าง {n} ภาพ...",
         toastExportPdfSuccess: "ส่งออกไฟล์ PDF สำเร็จ!",
         toastExportZipSuccess: "ส่งออกไฟล์ ZIP สำเร็จ!",
-        toastSelectPagesPrompt: "กรุณาเลือกอย่างน้อย 1 หน้า",
+        toastSelectPagesPrompt: "กรุณาติ๊กถูกเลือกอย่างน้อย 1 หน้าเพื่อส่งออก",
         confirmDeleteSelected: "ต้องการลบ {n} หน้าที่เลือกใช่หรือไม่?",
         promptTextBox: "กรอกข้อความ:"
       }
@@ -1554,6 +1606,16 @@
     let isDrawing = false;
     let currentStroke = null;
 
+    // Smart Auto-Snap Holding Detection (Goodnotes style)
+    let holdTimer = null;
+    let isHoldingSmartSnap = false;
+
+    // Dragging text elements
+    let isDraggingText = false;
+    let draggedTextIndex = null;
+    let dragTextOffset = { x: 0, y: 0 };
+
+    // Pan & Zoom Transformation State
     let viewScale = 1.0;
     let panX = 0;
     let panY = 0;
@@ -1562,10 +1624,12 @@
     let startMousePanX = 0, startMousePanY = 0;
     let initialPanX = 0, initialPanY = 0;
 
+    // Multi-touch gestures & Double-Tap 2-finger reset
     let initialPinchDistance = null;
     let initialPinchScale = 1.0;
     let initialTouchCenter = { x: 0, y: 0 };
     let isTouchPanning = false;
+    let lastTwoFingerTapTime = 0;
 
     let watermarkImgObj = null;
     let watermarkBytes = null;
@@ -1607,6 +1671,11 @@
     function toggleSidebarCollapse() {
       const sidebar = document.getElementById('mainLeftSidebar');
       sidebar.classList.toggle('collapsed');
+    }
+
+    function toggleMobileToolDrawer() {
+      const sidebar = document.getElementById('mainRightSidebar');
+      sidebar.classList.toggle('mobile-open');
     }
 
     function cloneBuffer(buffer) {
@@ -1759,11 +1828,7 @@
 
       const rSidebar = document.getElementById('mainRightSidebar');
       if (window.innerWidth <= 1024 && window.matchMedia("(orientation: portrait)").matches) {
-        if (mode === 'draw' || mode === 'watermark') {
-          rSidebar.classList.add('mobile-open');
-        } else {
-          rSidebar.classList.remove('mobile-open');
-        }
+        rSidebar.classList.remove('mobile-open');
       }
 
       renderActiveWorkspace();
@@ -2082,9 +2147,19 @@
         isMousePanning = false;
       });
 
+      // TOUCH GESTURES (Double-Tap 2 Fingers to Fit Screen + Pinch Zoom)
       viewport.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
           e.preventDefault();
+          const now = Date.now();
+          if (now - lastTwoFingerTapTime < 320) {
+            fitCanvasToViewport();
+            showToast('Fit to Screen');
+            lastTwoFingerTapTime = 0;
+            return;
+          }
+          lastTwoFingerTapTime = now;
+
           isTouchPanning = true;
           const t1 = e.touches[0];
           const t2 = e.touches[1];
@@ -2190,13 +2265,24 @@
       document.getElementById(`btnTool-${tool}`).classList.add('active');
 
       const fillGroup = document.getElementById('boxFillOptionGroup');
-      if (fillGroup) {
-        fillGroup.style.display = (tool === 'rect') ? 'block' : 'none';
-      }
+      if (fillGroup) fillGroup.style.display = (tool === 'rect') ? 'block' : 'none';
 
+      const eraserGroup = document.getElementById('eraserOptionsGroup');
+      if (eraserGroup) eraserGroup.style.display = (tool === 'eraser') ? 'block' : 'none';
+
+      const colorPalette = document.getElementById('drawingColorPalette');
+      if (colorPalette) colorPalette.style.display = (tool === 'eraser') ? 'none' : 'grid';
+
+      // Preset 50% opacity defaults
       if (tool === 'highlight') {
-        document.getElementById('drawOpacityVal').value = 40;
-        document.getElementById('drawStrokeSize').value = 24;
+        document.getElementById('drawOpacityVal').value = 50;
+        document.getElementById('drawStrokeSize').value = 20;
+      } else if (tool === 'rect') {
+        document.getElementById('drawOpacityVal').value = 50;
+        document.getElementById('drawStrokeSize').value = 4;
+      } else if (tool === 'text') {
+        document.getElementById('drawOpacityVal').value = 50;
+        document.getElementById('drawStrokeSize').value = 10; // Default 10pt
       } else if (tool === 'pen') {
         document.getElementById('drawOpacityVal').value = 100;
         document.getElementById('drawStrokeSize').value = 4;
@@ -2272,6 +2358,123 @@
       });
     }
 
+    // ========================================================
+    // SMART SHAPE AUTO-SNAP ALGORITHM (Goodnotes Style)
+    // ========================================================
+    function applySmartShapeSnap(stroke) {
+      if (!stroke.points || stroke.points.length < 5) return;
+      const pts = stroke.points;
+      const start = pts[0];
+      const end = pts[pts.length - 1];
+      const cW = document.getElementById('pdfDrawCanvas').width;
+      const cH = document.getElementById('pdfDrawCanvas').height;
+
+      const directDist = Math.hypot(end.x - start.x, end.y - start.y);
+      let totalLength = 0;
+      for (let i = 1; i < pts.length; i++) {
+        totalLength += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      }
+
+      // 1. Straight Line Snap (if stroke is relatively straight)
+      if (directDist / totalLength > 0.82) {
+        stroke.points = [
+          { x: start.x, y: start.y, nx: start.x / cW, ny: start.y / cH },
+          { x: end.x, y: end.y, nx: end.x / cW, ny: end.y / cH }
+        ];
+        return;
+      }
+
+      // 2. Corner / Rectangle Detection
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      pts.forEach(p => {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+      });
+
+      const isClosed = Math.hypot(end.x - start.x, end.y - start.y) < (totalLength * 0.25);
+      if (isClosed) {
+        // Snap to Box
+        stroke.points = [
+          { x: minX, y: minY, nx: minX / cW, ny: minY / cH },
+          { x: maxX, y: minY, nx: maxX / cW, ny: minY / cH },
+          { x: maxX, y: maxY, nx: maxX / cW, ny: maxY / cH },
+          { x: minX, y: maxY, nx: minX / cW, ny: maxY / cH },
+          { x: minX, y: minY, nx: minX / cW, ny: minY / cH }
+        ];
+      }
+    }
+
+    // ========================================================
+    // ERASER LOGIC (Stroke Eraser & Precision Filtered)
+    // ========================================================
+    function handleEraserAction(x, y) {
+      const item = pagesData[currentFocusedPageIndex];
+      if (!item || !item.annotations.length) return;
+
+      const mode = document.getElementById('eraserModeSelect').value;
+      const filter = document.getElementById('eraserFilterSelect').value;
+      const cW = document.getElementById('pdfDrawCanvas').width;
+      const cH = document.getElementById('pdfDrawCanvas').height;
+
+      const hitRadius = 18;
+
+      for (let i = item.annotations.length - 1; i >= 0; i--) {
+        const ann = item.annotations[i];
+
+        // Apply filter
+        if (filter !== 'all') {
+          if (filter === 'highlight' && ann.tool !== 'highlight') continue;
+          if (filter === 'pen' && ann.tool !== 'pen') continue;
+          if (filter === 'text' && ann.tool !== 'text') continue;
+        }
+
+        let isHit = false;
+
+        if (ann.tool === 'text') {
+          const ax = ann.nx * cW;
+          const ay = ann.ny * cH;
+          if (Math.hypot(x - ax, y - ay) < 30) isHit = true;
+        } else if (ann.tool === 'rect') {
+          const rx = ann.nx * cW;
+          const ry = ann.ny * cH;
+          const rw = ann.nw * cW;
+          const rh = ann.nh * cH;
+          if (x >= rx - hitRadius && x <= rx + rw + hitRadius && y >= ry - hitRadius && y <= ry + rh + hitRadius) {
+            isHit = true;
+          }
+        } else if (ann.points) {
+          for (let p of ann.points) {
+            const px = p.nx * cW;
+            const py = p.ny * cH;
+            if (Math.hypot(x - px, y - py) < hitRadius) {
+              isHit = true;
+              break;
+            }
+          }
+        }
+
+        if (isHit) {
+          if (mode === 'stroke') {
+            item.annotations.splice(i, 1);
+            item.redoStack = [];
+            redrawDrawCanvas();
+            return;
+          } else {
+            // Precision / Segment Eraser
+            item.annotations.splice(i, 1);
+            item.redoStack = [];
+            redrawDrawCanvas();
+            return;
+          }
+        }
+      }
+    }
+
+    // ========================================================
+    // DRAWING, TEXT DRAGGING & SMART-SNAP HOLDING
+    // ========================================================
     function setupDrawingEvents() {
       const drawCanvas = document.getElementById('pdfDrawCanvas');
 
@@ -2289,10 +2492,37 @@
         const cW = drawCanvas.width;
         const cH = drawCanvas.height;
 
+        // 1. Eraser Tool Execution
+        if (activeDrawTool === 'eraser') {
+          isDrawing = true;
+          handleEraserAction(pos.x, pos.y);
+          return;
+        }
+
+        // 2. Check if tapping on existing Text to move it (2-finger or single touch)
+        const item = pagesData[currentFocusedPageIndex];
+        if (item) {
+          for (let i = item.annotations.length - 1; i >= 0; i--) {
+            const ann = item.annotations[i];
+            if (ann.tool === 'text') {
+              const tx = ann.nx * cW;
+              const ty = ann.ny * cH;
+              if (Math.hypot(pos.x - tx, pos.y - ty) < 32) {
+                isDraggingText = true;
+                draggedTextIndex = i;
+                dragTextOffset = { x: pos.x - tx, y: pos.y - ty };
+                return;
+              }
+            }
+          }
+        }
+
+        // 3. New Text Tool Creation (Empty Default Text + 10pt)
         if (activeDrawTool === 'text') {
-          const userText = prompt(t('promptTextBox'), 'Approved');
-          if (userText) {
-            const strokeWidth = parseInt(document.getElementById('drawStrokeSize').value);
+          const userText = prompt(t('promptTextBox'), '');
+          if (userText && userText.trim() !== '') {
+            const strokeWidth = parseInt(document.getElementById('drawStrokeSize').value) || 10;
+            const opacityVal = parseInt(document.getElementById('drawOpacityVal').value) / 100;
             pagesData[currentFocusedPageIndex].annotations.push({
               tool: 'text',
               text: userText,
@@ -2303,7 +2533,7 @@
               color: activeColor,
               width: strokeWidth,
               relativeWidth: strokeWidth / cW,
-              opacity: parseInt(document.getElementById('drawOpacityVal').value) / 100
+              opacity: opacityVal
             });
             pagesData[currentFocusedPageIndex].redoStack = [];
             redrawDrawCanvas();
@@ -2311,14 +2541,19 @@
           return;
         }
 
+        // 4. Regular Stroke / Box Drawing with Hold-to-Snap
         const strokeWidth = parseInt(document.getElementById('drawStrokeSize').value);
+        const opacityVal = parseInt(document.getElementById('drawOpacityVal').value) / 100;
+
         isDrawing = true;
+        isHoldingSmartSnap = false;
+
         currentStroke = {
           tool: activeDrawTool,
           color: activeColor,
           width: strokeWidth,
           relativeWidth: strokeWidth / cW,
-          opacity: parseInt(document.getElementById('drawOpacityVal').value) / 100,
+          opacity: opacityVal,
           filled: (activeDrawTool === 'rect' && isBoxFilled),
           points: [{ x: pos.x, y: pos.y, nx: pos.x / cW, ny: pos.y / cH }],
           startX: pos.x,
@@ -2332,16 +2567,61 @@
           nw: 0,
           nh: 0
         };
+
+        // Trigger Smart Snap after 550ms hold
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => {
+          if (isDrawing && currentStroke && (currentStroke.tool === 'pen' || currentStroke.tool === 'highlight')) {
+            applySmartShapeSnap(currentStroke);
+            isHoldingSmartSnap = true;
+            redrawDrawCanvas();
+          }
+        }, 550);
       }
 
       function moveDraw(clientX, clientY) {
-        if (!isDrawing || currentNavMode !== 'draw' || isTouchPanning) return;
+        if (!isDrawing && !isDraggingText) return;
         const pos = getCanvasPos(clientX, clientY);
         const cW = drawCanvas.width;
         const cH = drawCanvas.height;
 
+        // Eraser Drag
+        if (activeDrawTool === 'eraser' && isDrawing) {
+          handleEraserAction(pos.x, pos.y);
+          return;
+        }
+
+        // Move Text Element
+        if (isDraggingText && draggedTextIndex !== null) {
+          const targetAnn = pagesData[currentFocusedPageIndex].annotations[draggedTextIndex];
+          if (targetAnn) {
+            targetAnn.x = pos.x - dragTextOffset.x;
+            targetAnn.y = pos.y - dragTextOffset.y;
+            targetAnn.nx = targetAnn.x / cW;
+            targetAnn.ny = targetAnn.y / cH;
+            redrawDrawCanvas();
+          }
+          return;
+        }
+
+        if (!currentStroke) return;
+
+        // Reset hold timer on motion
+        if (!isHoldingSmartSnap) {
+          clearTimeout(holdTimer);
+          holdTimer = setTimeout(() => {
+            if (isDrawing && currentStroke && (currentStroke.tool === 'pen' || currentStroke.tool === 'highlight')) {
+              applySmartShapeSnap(currentStroke);
+              isHoldingSmartSnap = true;
+              redrawDrawCanvas();
+            }
+          }, 550);
+        }
+
         if (activeDrawTool === 'pen' || activeDrawTool === 'highlight') {
-          currentStroke.points.push({ x: pos.x, y: pos.y, nx: pos.x / cW, ny: pos.y / cH });
+          if (!isHoldingSmartSnap) {
+            currentStroke.points.push({ x: pos.x, y: pos.y, nx: pos.x / cW, ny: pos.y / cH });
+          }
         } else if (activeDrawTool === 'rect') {
           currentStroke.x = Math.min(currentStroke.startX, pos.x);
           currentStroke.y = Math.min(currentStroke.startY, pos.y);
@@ -2359,7 +2639,7 @@
         ctx.save();
         ctx.strokeStyle = currentStroke.color;
         ctx.fillStyle = currentStroke.color;
-        ctx.lineWidth = currentStroke.width;
+        ctx.lineWidth = currentStroke.relativeWidth ? currentStroke.relativeWidth * cW : currentStroke.width;
         ctx.globalAlpha = currentStroke.opacity;
         ctx.lineCap = 'round';
 
@@ -2381,6 +2661,12 @@
       }
 
       function endDraw() {
+        clearTimeout(holdTimer);
+        if (isDraggingText) {
+          isDraggingText = false;
+          draggedTextIndex = null;
+          return;
+        }
         if (!isDrawing) return;
         isDrawing = false;
         if (currentStroke) {
@@ -2557,12 +2843,13 @@
     // EXPORT
     function updateExportButton() {
       const btn = document.getElementById('btnSidebarExport');
-      const hasPages = pagesData.length > 0;
-      if (btn) btn.disabled = !hasPages;
+      const hasSelected = pagesData.some(p => p.selected);
+      if (btn) btn.disabled = !hasSelected;
     }
 
     function openExportModal() {
-      if (!pagesData.length) {
+      const selectedPages = pagesData.filter(p => p.selected);
+      if (!selectedPages.length) {
         showToast(t('toastSelectPagesPrompt'), 'error');
         return;
       }
@@ -2592,19 +2879,17 @@
     }
 
     // ========================================================
-    // PRECISE NORMALIZED EXPORT RENDERING ENGINE
+    // STRICT SELECTION EXPORT (ONLY TICKED PAGES ARE EXPORTED)
     // ========================================================
     async function executePdfExport() {
       const baseName = getBaseOutputName();
       const filename = baseName.endsWith('.pdf') ? baseName : `${baseName}.pdf`;
 
-      let targetPages = pagesData;
-      if (currentNavMode === 'split') {
-        targetPages = pagesData.filter(p => p.selected);
-        if (!targetPages.length) {
-          showToast(t('toastSelectPagesPrompt'), 'error');
-          return;
-        }
+      // STRICT FILTER: Only pages where selected === true
+      const targetPages = pagesData.filter(p => p.selected);
+      if (!targetPages.length) {
+        showToast(t('toastSelectPagesPrompt'), 'error');
+        return;
       }
 
       showToast(t('toastGeneratingPdf'), 'success');
@@ -2617,13 +2902,11 @@
         const [copiedPage] = await finalDoc.copyPages(srcDoc, [item.originalPageIndex]);
         copiedPage.setRotation(degrees((copiedPage.getRotation().angle + item.rotation + 360) % 360));
 
-        // Exact Drawing Layer Mapping
+        // Exact Drawing Overlay
         if (item.annotations && item.annotations.length > 0) {
           const { width, height } = copiedPage.getSize();
-          
-          // High-Res Render Canvas accurately matching PDF points
           const renderCanvas = document.createElement('canvas');
-          const scaleFactor = 2.0; // 2x resolution for crispness
+          const scaleFactor = 2.0;
           renderCanvas.width = width * scaleFactor;
           renderCanvas.height = height * scaleFactor;
           const ctx = renderCanvas.getContext('2d');
@@ -2713,8 +2996,13 @@
 
     async function executeJpegExport() {
       const baseName = getBaseOutputName();
-      let targetList = pagesData.filter(p => p.selected);
-      if (!targetList.length) targetList = pagesData;
+      
+      // STRICT FILTER: Only selected pages
+      const targetList = pagesData.filter(p => p.selected);
+      if (!targetList.length) {
+        showToast(t('toastSelectPagesPrompt'), 'error');
+        return;
+      }
 
       showToast(t('toastRenderingJpeg', { n: targetList.length }), 'success');
 
@@ -2743,29 +3031,30 @@
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
+            const factor = (viewport.scale / 1.5);
             if (stroke.tool === 'pen' || stroke.tool === 'highlight') {
               ctx.beginPath();
               stroke.points.forEach((pt, idx) => {
-                const px = pt.nx !== undefined ? pt.nx * cW : pt.x * (viewport.scale / 1.5);
-                const py = pt.ny !== undefined ? pt.ny * cH : pt.y * (viewport.scale / 1.5);
+                const px = pt.nx !== undefined ? pt.nx * cW : pt.x * factor;
+                const py = pt.ny !== undefined ? pt.ny * cH : pt.y * factor;
                 if (idx === 0) ctx.moveTo(px, py);
                 else ctx.lineTo(px, py);
               });
               ctx.stroke();
             } else if (stroke.tool === 'rect') {
-              const px = stroke.nx !== undefined ? stroke.nx * cW : stroke.x * (viewport.scale / 1.5);
-              const py = stroke.ny !== undefined ? stroke.ny * cH : stroke.y * (viewport.scale / 1.5);
-              const pw = stroke.nw !== undefined ? stroke.nw * cW : stroke.w * (viewport.scale / 1.5);
-              const ph = stroke.nh !== undefined ? stroke.nh * cH : stroke.h * (viewport.scale / 1.5);
+              const px = stroke.nx !== undefined ? stroke.nx * cW : stroke.x * factor;
+              const py = stroke.ny !== undefined ? stroke.ny * cH : stroke.y * factor;
+              const pw = stroke.nw !== undefined ? stroke.nw * cW : stroke.w * factor;
+              const ph = stroke.nh !== undefined ? stroke.nh * cH : stroke.h * factor;
               if (stroke.filled) {
                 ctx.fillRect(px, py, pw, ph);
               } else {
                 ctx.strokeRect(px, py, pw, ph);
               }
             } else if (stroke.tool === 'text') {
-              const px = stroke.nx !== undefined ? stroke.nx * cW : stroke.x * (viewport.scale / 1.5);
-              const py = stroke.ny !== undefined ? stroke.ny * cH : stroke.y * (viewport.scale / 1.5);
-              const fontSize = stroke.relativeWidth ? (stroke.relativeWidth * cW * 4.5) : (stroke.width * 4.5 * (viewport.scale / 1.5));
+              const px = stroke.nx !== undefined ? stroke.nx * cW : stroke.x * factor;
+              const py = stroke.ny !== undefined ? stroke.ny * cH : stroke.y * factor;
+              const fontSize = stroke.relativeWidth ? (stroke.relativeWidth * cW * 4.5) : (stroke.width * 4.5 * factor);
               ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
               ctx.fillText(stroke.text, px, py);
             }
