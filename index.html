@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>SMart PDF Editor PRO Ver.1.0.4</title>
+  <title>SMart PDF Editor PRO Ver.1.0.5</title>
 
   <!-- iOS Web App Configurations -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -571,7 +571,6 @@
       cursor: grabbing;
     }
 
-    /* Transform Box for Pan & Zoom */
     .canvas-transform-box {
       transform-origin: 0 0;
       position: absolute;
@@ -622,7 +621,7 @@
       display: block;
     }
 
-    /* FLOATING ZOOM CONTROLLER WIDGET */
+    /* Floating Zoom Controls */
     .floating-zoom-widget {
       position: absolute;
       right: 14px;
@@ -761,7 +760,7 @@
       color: #FFF;
     }
 
-    /* Beautiful Fill Option Pill Button */
+    /* Box Fill Toggle */
     .box-fill-pill-btn {
       display: inline-flex;
       align-items: center;
@@ -1078,7 +1077,7 @@
         </svg>
       </div>
       <div class="brand-info">
-        <h1>SMart PDF Editor <span class="pro-badge">PRO</span> <span class="ver-badge">Ver.1.0.4</span></h1>
+        <h1>SMart PDF Editor <span class="pro-badge">PRO</span> <span class="ver-badge">Ver.1.0.5</span></h1>
       </div>
       <div class="file-status-info" id="fileStatusInfo">Open PDF files by clicking or dropping files in the center workspace</div>
     </div>
@@ -1143,7 +1142,6 @@
       <!-- SUBBAR -->
       <div class="stage-sub-bar-container">
         <div class="stage-sub-bar">
-          <!-- Batch actions + Reorder Undo/Redo -->
           <div class="subbar-group" id="gridBatchActions">
             <button class="subbar-btn" onclick="selectAllPages(true)" data-i18n="btnSelectAll">✓ All</button>
             <button class="subbar-btn" onclick="selectAllPages(false)" data-i18n="btnDeselectAll">✕ Deselect</button>
@@ -1556,9 +1554,6 @@
     let isDrawing = false;
     let currentStroke = null;
 
-    // ========================================================
-    // PAN & ZOOM TRANSFORMATION STATE ENGINE
-    // ========================================================
     let viewScale = 1.0;
     let panX = 0;
     let panY = 0;
@@ -1567,7 +1562,6 @@
     let startMousePanX = 0, startMousePanY = 0;
     let initialPanX = 0, initialPanY = 0;
 
-    // Multi-touch gestures
     let initialPinchDistance = null;
     let initialPinchScale = 1.0;
     let initialTouchCenter = { x: 0, y: 0 };
@@ -1981,9 +1975,6 @@
       renderActiveWorkspace();
     }
 
-    // ========================================================
-    // PAN & ZOOM TRANSFORMATION LOGIC
-    // ========================================================
     function applyTransform() {
       const box = document.getElementById('canvasTransformBox');
       box.style.transform = `translate(${panX}px, ${panY}px) scale(${viewScale})`;
@@ -2006,7 +1997,6 @@
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
 
-      // Zoom towards center of viewport
       panX = centerX - (centerX - panX) * (newScale / viewScale);
       panY = centerY - (centerY - panY) * (newScale / viewScale);
       viewScale = newScale;
@@ -2034,7 +2024,6 @@
     function initPanZoomListeners() {
       const viewport = document.getElementById('canvasViewport');
 
-      // PC Wheel Zoom (Ctrl + Wheel) & Wheel Pan
       viewport.addEventListener('wheel', (e) => {
         if (!isCanvasExpanded) return;
         e.preventDefault();
@@ -2051,14 +2040,12 @@
           viewScale = newScale;
           applyTransform();
         } else {
-          // Normal scroll pans the canvas
           panX -= e.deltaX;
           panY -= e.deltaY;
           applyTransform();
         }
       }, { passive: false });
 
-      // PC Spacebar drag or middle mouse drag
       window.addEventListener('keydown', (e) => {
         if (e.code === 'Space' && !isSpacebarDown && e.target.tagName !== 'INPUT') {
           isSpacebarDown = true;
@@ -2073,7 +2060,7 @@
       });
 
       viewport.addEventListener('mousedown', (e) => {
-        if (isSpacebarDown || e.button === 1) { // Space or middle mouse
+        if (isSpacebarDown || e.button === 1) {
           isMousePanning = true;
           startMousePanX = e.clientX;
           startMousePanY = e.clientY;
@@ -2095,7 +2082,6 @@
         isMousePanning = false;
       });
 
-      // TOUCH GESTURES: 2 FINGERS PINCH ZOOM & TWO FINGER PAN
       viewport.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
           e.preventDefault();
@@ -2120,12 +2106,10 @@
           const t1 = e.touches[0];
           const t2 = e.touches[1];
 
-          // 1. Pinch zoom calculation
           const currentDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
           const factor = currentDistance / initialPinchDistance;
           const newScale = Math.max(0.25, Math.min(3.0, initialPinchScale * factor));
 
-          // 2. Pan position calculation
           const currentCenter = {
             x: (t1.clientX + t2.clientX) / 2,
             y: (t1.clientY + t2.clientY) / 2
@@ -2190,7 +2174,6 @@
         document.getElementById('watermarkInteractiveLayer').style.display = 'none';
       }
 
-      // Automatically Fit Screen on first open
       fitCanvasToViewport();
     }
 
@@ -2247,11 +2230,14 @@
       const item = pagesData[currentFocusedPageIndex];
       if (!item) return;
 
+      const cW = drawCanvas.width;
+      const cH = drawCanvas.height;
+
       item.annotations.forEach(stroke => {
         ctx.save();
         ctx.strokeStyle = stroke.color;
         ctx.fillStyle = stroke.color;
-        ctx.lineWidth = stroke.width;
+        ctx.lineWidth = stroke.relativeWidth ? stroke.relativeWidth * cW : stroke.width;
         ctx.globalAlpha = stroke.opacity;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -2259,19 +2245,28 @@
         if (stroke.tool === 'pen' || stroke.tool === 'highlight') {
           ctx.beginPath();
           stroke.points.forEach((pt, idx) => {
-            if (idx === 0) ctx.moveTo(pt.x, pt.y);
-            else ctx.lineTo(pt.x, pt.y);
+            const rx = pt.nx !== undefined ? pt.nx * cW : pt.x;
+            const ry = pt.ny !== undefined ? pt.ny * cH : pt.y;
+            if (idx === 0) ctx.moveTo(rx, ry);
+            else ctx.lineTo(rx, ry);
           });
           ctx.stroke();
         } else if (stroke.tool === 'rect') {
+          const rx = stroke.nx !== undefined ? stroke.nx * cW : stroke.x;
+          const ry = stroke.ny !== undefined ? stroke.ny * cH : stroke.y;
+          const rw = stroke.nw !== undefined ? stroke.nw * cW : stroke.w;
+          const rh = stroke.nh !== undefined ? stroke.nh * cH : stroke.h;
           if (stroke.filled) {
-            ctx.fillRect(stroke.x, stroke.y, stroke.w, stroke.h);
+            ctx.fillRect(rx, ry, rw, rh);
           } else {
-            ctx.strokeRect(stroke.x, stroke.y, stroke.w, stroke.h);
+            ctx.strokeRect(rx, ry, rw, rh);
           }
         } else if (stroke.tool === 'text') {
-          ctx.font = `bold ${stroke.width * 4.5}px -apple-system, sans-serif`;
-          ctx.fillText(stroke.text, stroke.x, stroke.y);
+          const rx = stroke.nx !== undefined ? stroke.nx * cW : stroke.x;
+          const ry = stroke.ny !== undefined ? stroke.ny * cH : stroke.y;
+          const fontSize = stroke.relativeWidth ? (stroke.relativeWidth * cW * 4.5) : (stroke.width * 4.5);
+          ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
+          ctx.fillText(stroke.text, rx, ry);
         }
         ctx.restore();
       });
@@ -2280,7 +2275,6 @@
     function setupDrawingEvents() {
       const drawCanvas = document.getElementById('pdfDrawCanvas');
 
-      // Exact coordinate mapping factoring in Zoom Scale & Pan Offset
       function getCanvasPos(clientX, clientY) {
         const rect = drawCanvas.getBoundingClientRect();
         return {
@@ -2292,17 +2286,23 @@
       function startDraw(clientX, clientY) {
         if (currentNavMode !== 'draw' || isSpacebarDown || isMousePanning || isTouchPanning) return;
         const pos = getCanvasPos(clientX, clientY);
+        const cW = drawCanvas.width;
+        const cH = drawCanvas.height;
 
         if (activeDrawTool === 'text') {
           const userText = prompt(t('promptTextBox'), 'Approved');
           if (userText) {
+            const strokeWidth = parseInt(document.getElementById('drawStrokeSize').value);
             pagesData[currentFocusedPageIndex].annotations.push({
               tool: 'text',
               text: userText,
               x: pos.x,
               y: pos.y,
+              nx: pos.x / cW,
+              ny: pos.y / cH,
               color: activeColor,
-              width: parseInt(document.getElementById('drawStrokeSize').value),
+              width: strokeWidth,
+              relativeWidth: strokeWidth / cW,
               opacity: parseInt(document.getElementById('drawOpacityVal').value) / 100
             });
             pagesData[currentFocusedPageIndex].redoStack = [];
@@ -2311,34 +2311,46 @@
           return;
         }
 
+        const strokeWidth = parseInt(document.getElementById('drawStrokeSize').value);
         isDrawing = true;
         currentStroke = {
           tool: activeDrawTool,
           color: activeColor,
-          width: parseInt(document.getElementById('drawStrokeSize').value),
+          width: strokeWidth,
+          relativeWidth: strokeWidth / cW,
           opacity: parseInt(document.getElementById('drawOpacityVal').value) / 100,
           filled: (activeDrawTool === 'rect' && isBoxFilled),
-          points: [{ x: pos.x, y: pos.y }],
+          points: [{ x: pos.x, y: pos.y, nx: pos.x / cW, ny: pos.y / cH }],
           startX: pos.x,
           startY: pos.y,
           x: pos.x,
           y: pos.y,
+          nx: pos.x / cW,
+          ny: pos.y / cH,
           w: 0,
-          h: 0
+          h: 0,
+          nw: 0,
+          nh: 0
         };
       }
 
       function moveDraw(clientX, clientY) {
         if (!isDrawing || currentNavMode !== 'draw' || isTouchPanning) return;
         const pos = getCanvasPos(clientX, clientY);
+        const cW = drawCanvas.width;
+        const cH = drawCanvas.height;
 
         if (activeDrawTool === 'pen' || activeDrawTool === 'highlight') {
-          currentStroke.points.push({ x: pos.x, y: pos.y });
+          currentStroke.points.push({ x: pos.x, y: pos.y, nx: pos.x / cW, ny: pos.y / cH });
         } else if (activeDrawTool === 'rect') {
           currentStroke.x = Math.min(currentStroke.startX, pos.x);
           currentStroke.y = Math.min(currentStroke.startY, pos.y);
           currentStroke.w = Math.abs(pos.x - currentStroke.startX);
           currentStroke.h = Math.abs(pos.y - currentStroke.startY);
+          currentStroke.nx = currentStroke.x / cW;
+          currentStroke.ny = currentStroke.y / cH;
+          currentStroke.nw = currentStroke.w / cW;
+          currentStroke.nh = currentStroke.h / cH;
         }
 
         redrawDrawCanvas();
@@ -2385,12 +2397,11 @@
       drawCanvas.onmousemove = (e) => moveDraw(e.clientX, e.clientY);
       drawCanvas.onmouseup = endDraw;
 
-      // Touch / Apple Pencil Listener (Single finger draws, Two fingers pan/zoom)
       drawCanvas.ontouchstart = (e) => {
         if (e.touches.length === 1 && !isTouchPanning) {
           startDraw(e.touches[0].clientX, e.touches[0].clientY);
         } else if (e.touches.length >= 2) {
-          endDraw(); // Cancel single drawing when second finger touches
+          endDraw();
         }
       };
       drawCanvas.ontouchmove = (e) => {
@@ -2580,6 +2591,9 @@
       }
     }
 
+    // ========================================================
+    // PRECISE NORMALIZED EXPORT RENDERING ENGINE
+    // ========================================================
     async function executePdfExport() {
       const baseName = getBaseOutputName();
       const filename = baseName.endsWith('.pdf') ? baseName : `${baseName}.pdf`;
@@ -2603,19 +2617,23 @@
         const [copiedPage] = await finalDoc.copyPages(srcDoc, [item.originalPageIndex]);
         copiedPage.setRotation(degrees((copiedPage.getRotation().angle + item.rotation + 360) % 360));
 
+        // Exact Drawing Layer Mapping
         if (item.annotations && item.annotations.length > 0) {
           const { width, height } = copiedPage.getSize();
+          
+          // High-Res Render Canvas accurately matching PDF points
           const renderCanvas = document.createElement('canvas');
-          renderCanvas.width = width * 2;
-          renderCanvas.height = height * 2;
+          const scaleFactor = 2.0; // 2x resolution for crispness
+          renderCanvas.width = width * scaleFactor;
+          renderCanvas.height = height * scaleFactor;
           const ctx = renderCanvas.getContext('2d');
-          ctx.scale(2, 2);
+          ctx.scale(scaleFactor, scaleFactor);
 
           item.annotations.forEach(stroke => {
             ctx.save();
             ctx.strokeStyle = stroke.color;
             ctx.fillStyle = stroke.color;
-            ctx.lineWidth = stroke.width;
+            ctx.lineWidth = stroke.relativeWidth ? (stroke.relativeWidth * width) : stroke.width;
             ctx.globalAlpha = stroke.opacity;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -2623,19 +2641,28 @@
             if (stroke.tool === 'pen' || stroke.tool === 'highlight') {
               ctx.beginPath();
               stroke.points.forEach((pt, idx) => {
-                if (idx === 0) ctx.moveTo(pt.x, pt.y);
-                else ctx.lineTo(pt.x, pt.y);
+                const px = pt.nx !== undefined ? pt.nx * width : pt.x;
+                const py = pt.ny !== undefined ? pt.ny * height : pt.y;
+                if (idx === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
               });
               ctx.stroke();
             } else if (stroke.tool === 'rect') {
+              const px = stroke.nx !== undefined ? stroke.nx * width : stroke.x;
+              const py = stroke.ny !== undefined ? stroke.ny * height : stroke.y;
+              const pw = stroke.nw !== undefined ? stroke.nw * width : stroke.w;
+              const ph = stroke.nh !== undefined ? stroke.nh * height : stroke.h;
               if (stroke.filled) {
-                ctx.fillRect(stroke.x, stroke.y, stroke.w, stroke.h);
+                ctx.fillRect(px, py, pw, ph);
               } else {
-                ctx.strokeRect(stroke.x, stroke.y, stroke.w, stroke.h);
+                ctx.strokeRect(px, py, pw, ph);
               }
             } else if (stroke.tool === 'text') {
-              ctx.font = `bold ${stroke.width * 4.5}px -apple-system, sans-serif`;
-              ctx.fillText(stroke.text, stroke.x, stroke.y);
+              const px = stroke.nx !== undefined ? stroke.nx * width : stroke.x;
+              const py = stroke.ny !== undefined ? stroke.ny * height : stroke.y;
+              const fontSize = stroke.relativeWidth ? (stroke.relativeWidth * width * 4.5) : (stroke.width * 4.5);
+              ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
+              ctx.fillText(stroke.text, px, py);
             }
             ctx.restore();
           });
@@ -2646,6 +2673,7 @@
           copiedPage.drawImage(embeddedImage, { x: 0, y: 0, width: width, height: height });
         }
 
+        // Watermark Mapping
         if (watermarkBytes) {
           const scope = document.getElementById('wmScopeSelect').value;
           const originalIdx = pagesData.indexOf(item);
@@ -2702,33 +2730,44 @@
         const ctx = canvas.getContext('2d');
         await page.render({ canvasContext: ctx, viewport }).promise;
 
+        const cW = canvas.width;
+        const cH = canvas.height;
+
         if (item.annotations && item.annotations.length > 0) {
           item.annotations.forEach(stroke => {
             ctx.save();
             ctx.strokeStyle = stroke.color;
             ctx.fillStyle = stroke.color;
-            ctx.lineWidth = stroke.width * (viewport.scale / 1.5);
+            ctx.lineWidth = stroke.relativeWidth ? (stroke.relativeWidth * cW) : (stroke.width * (viewport.scale / 1.5));
             ctx.globalAlpha = stroke.opacity;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
-            const factor = (viewport.scale / 1.5);
             if (stroke.tool === 'pen' || stroke.tool === 'highlight') {
               ctx.beginPath();
               stroke.points.forEach((pt, idx) => {
-                if (idx === 0) ctx.moveTo(pt.x * factor, pt.y * factor);
-                else ctx.lineTo(pt.x * factor, pt.y * factor);
+                const px = pt.nx !== undefined ? pt.nx * cW : pt.x * (viewport.scale / 1.5);
+                const py = pt.ny !== undefined ? pt.ny * cH : pt.y * (viewport.scale / 1.5);
+                if (idx === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
               });
               ctx.stroke();
             } else if (stroke.tool === 'rect') {
+              const px = stroke.nx !== undefined ? stroke.nx * cW : stroke.x * (viewport.scale / 1.5);
+              const py = stroke.ny !== undefined ? stroke.ny * cH : stroke.y * (viewport.scale / 1.5);
+              const pw = stroke.nw !== undefined ? stroke.nw * cW : stroke.w * (viewport.scale / 1.5);
+              const ph = stroke.nh !== undefined ? stroke.nh * cH : stroke.h * (viewport.scale / 1.5);
               if (stroke.filled) {
-                ctx.fillRect(stroke.x * factor, stroke.y * factor, stroke.w * factor, stroke.h * factor);
+                ctx.fillRect(px, py, pw, ph);
               } else {
-                ctx.strokeRect(stroke.x * factor, stroke.y * factor, stroke.w * factor, stroke.h * factor);
+                ctx.strokeRect(px, py, pw, ph);
               }
             } else if (stroke.tool === 'text') {
-              ctx.font = `bold ${stroke.width * 4.5 * factor}px -apple-system, sans-serif`;
-              ctx.fillText(stroke.text, stroke.x * factor, stroke.y * factor);
+              const px = stroke.nx !== undefined ? stroke.nx * cW : stroke.x * (viewport.scale / 1.5);
+              const py = stroke.ny !== undefined ? stroke.ny * cH : stroke.y * (viewport.scale / 1.5);
+              const fontSize = stroke.relativeWidth ? (stroke.relativeWidth * cW * 4.5) : (stroke.width * 4.5 * (viewport.scale / 1.5));
+              ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
+              ctx.fillText(stroke.text, px, py);
             }
             ctx.restore();
           });
@@ -2742,12 +2781,10 @@
             || (scope === 'first' && originalIdx === 0);
 
           if (shouldStamp) {
-            const canvasW = canvas.width;
-            const canvasH = canvas.height;
-            const imgW = (canvasW * 0.5) * wmScaleRatio;
+            const imgW = (cW * 0.5) * wmScaleRatio;
             const imgH = (imgW / watermarkImgObj.width) * watermarkImgObj.height;
-            const left = (canvasW * wmPosXRatio) - (imgW / 2);
-            const top = (canvasH * (1 - wmPosYRatio)) - (imgH / 2);
+            const left = (cW * wmPosXRatio) - (imgW / 2);
+            const top = (cH * (1 - wmPosYRatio)) - (imgH / 2);
 
             ctx.save();
             ctx.globalAlpha = wmOpacityRatio;
